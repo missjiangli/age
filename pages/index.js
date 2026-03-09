@@ -4,7 +4,91 @@ import Head from 'next/head';
 import DatePicker from 'react-datepicker';
 import { Lunar, Solar, FiveElement } from 'lunar-javascript';
 
-// 12 Zodiac Animals (English + Icon)
+// 全局样式（统一配色+现代风格）
+const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  :root {
+    --primary: #3b82f6; /* 主色调：柔和蓝 */
+    --primary-hover: #2563eb;
+    --secondary: #14b8a6; /* 生肖模块色：青绿色 */
+    --success: #22c55e; /* 五行模块色：绿色 */
+    --neutral-50: #f9fafb;
+    --neutral-100: #f3f4f6;
+    --neutral-200: #e5e7eb;
+    --neutral-700: #374151;
+    --neutral-900: #111827;
+    --red-600: #dc2626;
+    --green-600: #16a34a;
+  }
+  
+  body {
+    background-color: var(--neutral-50);
+    color: var(--neutral-700);
+  }
+  
+  /* 自定义日期选择器样式 */
+  .react-datepicker {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    padding: 1rem !important;
+    font-family: 'Inter', sans-serif !important;
+  }
+  
+  .react-datepicker__header {
+    background-color: white !important;
+    border-bottom: 1px solid var(--neutral-100) !important;
+    padding: 1rem !important;
+  }
+  
+  .react-datepicker__current-month {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: var(--neutral-900) !important;
+  }
+  
+  .react-datepicker__day {
+    border-radius: 8px !important;
+    margin: 2px !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .react-datepicker__day--selected {
+    background-color: var(--primary) !important;
+    color: white !important;
+  }
+  
+  .react-datepicker__day--hover:not(.react-datepicker__day--selected) {
+    background-color: var(--neutral-100) !important;
+  }
+  
+  .react-datepicker__time-container {
+    border-left: 1px solid var(--neutral-100) !important;
+  }
+  
+  .react-datepicker__time-list-item {
+    border-radius: 8px !important;
+    margin: 2px 0 !important;
+  }
+  
+  .react-datepicker__time-list-item--selected {
+    background-color: var(--primary) !important;
+  }
+`;
+
+// 十二生肖配置
 const ZODIAC_LIST = [
   { name: 'Rat', cn: '鼠', icon: '🐭' },
   { name: 'Ox', cn: '牛', icon: '🐂' },
@@ -20,18 +104,14 @@ const ZODIAC_LIST = [
   { name: 'Pig', cn: '猪', icon: '🐷' }
 ];
 
-// Five Elements Mapping (Lunar-javascript CN → EN)
+// 五行映射
 const ELEMENT_MAP = {
-  '木': 'Wood',
-  '火': 'Fire',
-  '土': 'Earth',
-  '金': 'Metal',
-  '水': 'Water'
+  '木': 'Wood', '火': 'Fire', '土': 'Earth', '金': 'Metal', '水': 'Water'
 };
 const ALL_ELEMENTS = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
 
 export default function AgeCalculator() {
-  // Default: March 8, 1990 00:00 (month starts at 0)
+  // 默认时间：1990年3月8日
   const [birthDateTime, setBirthDateTime] = useState(new Date(1990, 2, 8, 0, 0));
   const [ageResult, setAgeResult] = useState(null);
   const [lunarInfo, setLunarInfo] = useState(null);
@@ -44,7 +124,7 @@ export default function AgeCalculator() {
     const birth = new Date(birthDateTime);
     const now = new Date();
     
-    // Exact Age Calculation
+    // 精准年龄计算
     const diffMs = now - birth;
     const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const years = Math.floor(totalDays / 365.25);
@@ -54,13 +134,13 @@ export default function AgeCalculator() {
     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    // Lunar & Zodiac
+    // 农历+生肖
     const solar = Solar.fromDate(birth);
     const lunar = solar.getLunar();
     const zodiacCn = lunar.getYearZodiac();
     const zodiacItem = ZODIAC_LIST.find(item => item.cn === zodiacCn) || ZODIAC_LIST[0];
 
-    // Five Elements (CN → EN)
+    // 五行转换（中文→英文）
     const yearEl = ELEMENT_MAP[FiveElement.fromYear(lunar.getYear()).getName()] || 'Unknown';
     const monthEl = ELEMENT_MAP[FiveElement.fromMonth(lunar.getMonth()).getName()] || 'Unknown';
     const dayEl = ELEMENT_MAP[FiveElement.fromDay(lunar.getDay()).getName()] || 'Unknown';
@@ -68,7 +148,7 @@ export default function AgeCalculator() {
     const presentElements = [yearEl, monthEl, dayEl, hourEl].filter(el => el !== 'Unknown');
     const missingElements = ALL_ELEMENTS.filter(el => !presentElements.includes(el));
 
-    // Set States
+    // 更新状态
     setLunarInfo({
       lunarDate: lunar.toFullString(),
       zodiac: zodiacItem.name,
@@ -101,24 +181,25 @@ export default function AgeCalculator() {
         <meta name="twitter:title" content="Age Calculator | Exact Age & Chinese Zodiac" />
         <meta name="twitter:description" content="Free online age calculator with lunar calendar and 12 zodiac animals." />
         <meta name="robots" content="index, follow" />
+        <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center p-4 sm:p-6">
-        {/* Header */}
-        <div className="text-center mb-8 w-full max-w-2xl">
-          <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 mb-2">
+      <div className="min-h-screen flex flex-col items-center justify-start pt-8 pb-16 px-4 sm:px-6">
+        {/* 顶部标题区 */}
+        <div className="text-center mb-10 w-full max-w-2xl">
+          <h1 className="text-[clamp(2rem,5vw,3rem)] font-bold text-neutral-900 mb-3">
             Exact Age Calculator
           </h1>
-          <p className="text-neutral-500 text-lg">
-            Precise to Minute | Lunar Calendar | 12 Zodiac | Five Elements
+          <p className="text-lg text-neutral-600">
+            Calculate your precise age (to the minute) + Chinese zodiac & five elements
           </p>
         </div>
 
-        {/* Input Card (Dual-Month DatePicker) */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 w-full max-w-md">
-          <div className="mb-6">
-            <label className="block text-neutral-700 font-medium mb-2">
-              Select Your Birth Date & Time
+        {/* 输入卡片（核心交互区） */}
+        <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8 mb-8 transition-shadow hover:shadow-xl">
+          <div className="mb-7">
+            <label className="block text-neutral-700 font-medium mb-3 text-lg">
+              Your Birth Date & Time
             </label>
             <div className="relative">
               <DatePicker
@@ -131,8 +212,8 @@ export default function AgeCalculator() {
                 monthsShown={2}
                 minDate={new Date(1900, 0, 1)}
                 maxDate={new Date()}
-                className="w-full px-4 py-3 rounded-lg border border-neutral-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
-                placeholderText="Select birth date and time"
+                className="w-full px-5 py-4 rounded-lg border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base"
+                placeholderText="Select your birth date and time"
               />
             </div>
           </div>
@@ -140,46 +221,50 @@ export default function AgeCalculator() {
           <button
             onClick={calculateAge}
             disabled={!birthDateTime}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-300 text-white font-semibold py-3 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-98"
+            className="w-full bg-primary hover:bg-primary-hover disabled:bg-neutral-200 disabled:text-neutral-500 text-white font-semibold py-4 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-98 text-lg"
           >
-            Calculate Now
+            Calculate My Age
           </button>
         </div>
 
-        {/* Results */}
+        {/* 结果展示区 */}
         {ageResult && (
-          <div className="mt-8 w-full max-w-md space-y-6">
-            {/* Age Result */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-600">
-              <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold text-neutral-900">
+          <div className="w-full max-w-md space-y-5">
+            {/* 年龄结果卡片 */}
+            <div className="bg-white rounded-2xl shadow-lg p-7 border-l-4 border-primary">
+              <div className="text-center mb-5">
+                <h2 className="text-2xl font-bold text-neutral-900 mb-2">
                   You are {ageResult.years} Years Old
                 </h2>
-                <p className="text-neutral-500 text-lg">
+                <p className="text-neutral-600 text-lg">
                   {ageResult.months} Months, {ageResult.days} Days, {ageResult.hours} Hrs, {ageResult.minutes} Mins
                 </p>
               </div>
               <div className="pt-4 border-t border-neutral-100 text-center">
-                <p className="text-neutral-700">
-                  Total Days Lived: <span className="text-blue-600 font-bold text-xl">{ageResult.totalDays}</span>
+                <p className="text-neutral-700 text-lg">
+                  Total Days Lived: <span className="text-primary font-bold text-xl">{ageResult.totalDays}</span>
                 </p>
               </div>
             </div>
 
-            {/* Lunar & Zodiac */}
+            {/* 生肖+农历卡片 */}
             {lunarInfo && zodiacDetail && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-teal-500">
-                <h3 className="text-lg font-semibold text-neutral-900 mb-3">Lunar Calendar & Zodiac</h3>
-                <div className="space-y-3 text-neutral-700">
-                  <p>📅 Lunar Date: {lunarInfo.lunarDate}</p>
-                  <p className="text-lg">
-                    {zodiacDetail.icon} Chinese Zodiac: {zodiacDetail.name}
+              <div className="bg-white rounded-2xl shadow-lg p-7 border-l-4 border-secondary">
+                <h3 className="text-xl font-semibold text-neutral-900 mb-4">Chinese Zodiac & Lunar Calendar</h3>
+                <div className="space-y-4 text-neutral-700">
+                  <p className="text-base">
+                    📅 Lunar Date: <span className="text-neutral-800 font-medium">{lunarInfo.lunarDate}</span>
+                  </p>
+                  <p className="text-xl">
+                    {zodiacDetail.icon} Zodiac: <span className="font-semibold">{zodiacDetail.name}</span>
                     <span className="ml-2 text-sm text-neutral-500">({lunarInfo.lunarYear})</span>
                   </p>
-                  <p>♈ Constellation: {lunarInfo.constellation}</p>
+                  <p className="text-base">
+                    ♈ Constellation: <span className="text-neutral-800 font-medium">{lunarInfo.constellation}</span>
+                  </p>
                 </div>
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm text-neutral-600">
-                  {zodiacDetail.name} Personality Traits: {
+                <div className="mt-5 p-4 bg-neutral-50 rounded-lg text-sm text-neutral-600">
+                  <span className="font-medium">{zodiacDetail.name} Personality:</span> {
                     zodiacDetail.name === 'Rat' ? 'Intelligent, adaptable and quick-witted' :
                     zodiacDetail.name === 'Ox' ? 'Hardworking, reliable and patient' :
                     zodiacDetail.name === 'Tiger' ? 'Courageous, confident and decisive' :
@@ -196,15 +281,17 @@ export default function AgeCalculator() {
               </div>
             )}
 
-            {/* Five Elements (100% English) */}
+            {/* 五行分析卡片 */}
             {fiveElements && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
-                <h3 className="text-lg font-semibold text-neutral-900 mb-3">Five Elements Analysis</h3>
-                <div className="space-y-2 text-neutral-700">
-                  <p>🔮 Present Elements: {fiveElements.present}</p>
+              <div className="bg-white rounded-2xl shadow-lg p-7 border-l-4 border-success">
+                <h3 className="text-xl font-semibold text-neutral-900 mb-4">Five Elements Analysis</h3>
+                <div className="space-y-3 text-neutral-700 text-base">
+                  <p>
+                    🔮 Present Elements: <span className="text-neutral-800 font-medium">{fiveElements.present}</span>
+                  </p>
                   <p>
                     📿 Missing Elements:
-                    <span className={fiveElements.missing === 'All Elements Present' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                    <span className={fiveElements.missing === 'All Elements Present' ? 'text-green-600 font-medium ml-2' : 'text-red-600 font-medium ml-2'}>
                       {fiveElements.missing}
                     </span>
                   </p>
@@ -214,9 +301,9 @@ export default function AgeCalculator() {
           </div>
         )}
 
-        {/* Footer */}
+        {/* 底部版权 */}
         <footer className="mt-12 text-neutral-500 text-sm text-center">
-          © {new Date().getFullYear()} AgeCalcFast.com | Exact Age Calculation · Zodiac & Five Elements
+          © {new Date().getFullYear()} AgeCalcFast.com | All rights reserved
         </footer>
       </div>
     </>
