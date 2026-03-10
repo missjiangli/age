@@ -170,6 +170,7 @@ export default function AgeCalculator() {
       <Head>
         <title>Age Calculator | Exact Age, Days, Hours & Chinese Zodiac</title>
         <meta name="description" content="Free online age calculator with Chinese lunar calendar, 12 zodiac animals and Five Elements analysis (Wood, Fire, Earth, Metal, Water)." />
+       <meta name="google-site-verification" content="O01C0BjF7D8IdDOLzl9yQBrXpYMwVhgmU4RgBY8kdsA" />
         <meta name="keywords" content="age calculator, exact age calculator, birthday calculator, lunar calendar age, Chinese zodiac, 12 zodiac animals, Five Elements, Wood Fire Earth Metal Water, free age calculator" />
         <meta property="og:title" content="Age Calculator | Exact Age & Chinese Zodiac" />
         <meta property="og:description" content="Free online age calculator with lunar calendar, 12 zodiac animals and Five Elements analysis." />
