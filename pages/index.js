@@ -1,312 +1,845 @@
 // pages/index.js
-import { useState } from 'react';
 import Head from 'next/head';
-import DatePicker from 'react-datepicker';
-import { Lunar, Solar, FiveElement } from 'lunar-javascript';
+import { useEffect, useState } from 'react';
 
-// 全局样式（统一配色+现代风格）
-const globalStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-  
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-  }
-  
-  :root {
-    --primary: #3b82f6; /* 主色调：柔和蓝 */
-    --primary-hover: #2563eb;
-    --secondary: #14b8a6; /* 生肖模块色：青绿色 */
-    --success: #22c55e; /* 五行模块色：绿色 */
-    --neutral-50: #f9fafb;
-    --neutral-100: #f3f4f6;
-    --neutral-200: #e5e7eb;
-    --neutral-700: #374151;
-    --neutral-900: #111827;
-    --red-600: #dc2626;
-    --green-600: #16a34a;
-  }
-  
-  body {
-    background-color: var(--neutral-50);
-    color: var(--neutral-700);
-  }
-  
-  /* 自定义日期选择器样式 */
-  .react-datepicker {
-    border: none !important;
-    border-radius: 12px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
-    padding: 1rem !important;
-    font-family: 'Inter', sans-serif !important;
-  }
-  
-  .react-datepicker__header {
-    background-color: white !important;
-    border-bottom: 1px solid var(--neutral-100) !important;
-    padding: 1rem !important;
-  }
-  
-  .react-datepicker__current-month {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    color: var(--neutral-900) !important;
-  }
-  
-  .react-datepicker__day {
-    border-radius: 8px !important;
-    margin: 2px !important;
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  
-  .react-datepicker__day--selected {
-    background-color: var(--primary) !important;
-    color: white !important;
-  }
-  
-  .react-datepicker__day--hover:not(.react-datepicker__day--selected) {
-    background-color: var(--neutral-100) !important;
-  }
-  
-  .react-datepicker__time-container {
-    border-left: 1px solid var(--neutral-100) !important;
-  }
-  
-  .react-datepicker__time-list-item {
-    border-radius: 8px !important;
-    margin: 2px 0 !important;
-  }
-  
-  .react-datepicker__time-list-item--selected {
-    background-color: var(--primary) !important;
-  }
-`;
-
-// 十二生肖配置
-const ZODIAC_LIST = [
-  { name: 'Rat', cn: '鼠', icon: '🐭' },
-  { name: 'Ox', cn: '牛', icon: '🐂' },
-  { name: 'Tiger', cn: '虎', icon: '🐯' },
-  { name: 'Rabbit', cn: '兔', icon: '🐰' },
-  { name: 'Dragon', cn: '龙', icon: '🐲' },
-  { name: 'Snake', cn: '蛇', icon: '🐍' },
-  { name: 'Horse', cn: '马', icon: '🐴' },
-  { name: 'Goat', cn: '羊', icon: '🐐' },
-  { name: 'Monkey', cn: '猴', icon: '🐒' },
-  { name: 'Rooster', cn: '鸡', icon: '🐔' },
-  { name: 'Dog', cn: '狗', icon: '🐶' },
-  { name: 'Pig', cn: '猪', icon: '🐷' }
-];
-
-// 五行映射
-const ELEMENT_MAP = {
-  '木': 'Wood', '火': 'Fire', '土': 'Earth', '金': 'Metal', '水': 'Water'
-};
-const ALL_ELEMENTS = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
-
-export default function AgeCalculator() {
-  // 默认时间：1990年3月8日
-  const [birthDateTime, setBirthDateTime] = useState(new Date(1990, 2, 8, 0, 0));
+export default function Home() {
+  // 状态管理
+  const [activeTab, setActiveTab] = useState('age');
+  const [birthDate, setBirthDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [ageResult, setAgeResult] = useState(null);
-  const [lunarInfo, setLunarInfo] = useState(null);
-  const [fiveElements, setFiveElements] = useState(null);
-  const [zodiacDetail, setZodiacDetail] = useState(null);
+  const [zodiacResult, setZodiacResult] = useState(null);
+  const [diffResult, setDiffResult] = useState(null);
 
-  const calculateAge = () => {
-    if (!birthDateTime) return;
+  // 初始化日期
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setEndDate(today);
+    // 设置生日输入框最大值为今天
+    document.getElementById('birthDate')?.setAttribute('max', today);
+  }, []);
+
+  // 切换标签
+  const switchTab = (tabName) => {
+    setActiveTab(tabName);
+  };
+
+  // 生肖数据（英文版本）
+  const zodiacData = {
+    0: { 
+      name: 'Monkey', 
+      icon: '🐵', 
+      trait: 'Clever and smart, curious, good at solving problems, excellent adaptability', 
+      element: 'Metal', 
+      numbers: '4, 9', 
+      match: 'Rat, Dragon' 
+    },
+    1: { 
+      name: 'Rooster', 
+      icon: '🐔', 
+      trait: 'Hardworking and steady, detail-oriented, honest and trustworthy, strong sense of responsibility', 
+      element: 'Metal', 
+      numbers: '5, 7', 
+      match: 'Ox, Snake' 
+    },
+    2: { 
+      name: 'Dog', 
+      icon: '🐶', 
+      trait: 'Loyal and reliable, strong sense of justice, kind and friendly, protective', 
+      element: 'Earth', 
+      numbers: '3, 4', 
+      match: 'Tiger, Rabbit' 
+    },
+    3: { 
+      name: 'Pig', 
+      icon: '🐷', 
+      trait: 'Honest and kind, optimistic and open-minded, sincere to others, compassionate', 
+      element: 'Water', 
+      numbers: '2, 5', 
+      match: 'Goat, Rabbit' 
+    },
+    4: { 
+      name: 'Rat', 
+      icon: '🐭', 
+      trait: 'Witty and flexible, adaptable, good at socializing, creative', 
+      element: 'Water', 
+      numbers: '2, 3', 
+      match: 'Ox, Dragon, Monkey' 
+    },
+    5: { 
+      name: 'Ox', 
+      icon: '🐮', 
+      trait: 'Hardworking and steady, perseverance, honest and trustworthy, patient and persistent', 
+      element: 'Earth', 
+      numbers: '1, 4', 
+      match: 'Rat, Snake, Rooster' 
+    },
+    6: { 
+      name: 'Tiger', 
+      icon: '🐯', 
+      trait: 'Brave and confident, strong leadership, enthusiastic, adventurous', 
+      element: 'Wood', 
+      numbers: '3, 8', 
+      match: 'Horse, Dog' 
+    },
+    7: { 
+      name: 'Rabbit', 
+      icon: '🐰', 
+      trait: 'Gentle and kind, delicate mind, elegant and quiet, considerate', 
+      element: 'Wood', 
+      numbers: '3, 6', 
+      match: 'Goat, Dog, Pig' 
+    },
+    8: { 
+      name: 'Dragon', 
+      icon: '🐲', 
+      trait: 'Full of vitality, confident, ambitious, creative', 
+      element: 'Earth', 
+      numbers: '1, 6', 
+      match: 'Rat, Monkey, Rooster' 
+    },
+    9: { 
+      name: 'Snake', 
+      icon: '🐍', 
+      trait: 'Wise and profound, quick thinking, mysterious and elegant, strong insight', 
+      element: 'Fire', 
+      numbers: '2, 8', 
+      match: 'Ox, Rooster' 
+    },
+    10: { 
+      name: 'Horse', 
+      icon: '🐴', 
+      trait: 'Passionate and unrestrained, free-spirited, quick thinking, good at socializing', 
+      element: 'Fire', 
+      numbers: '2, 7', 
+      match: 'Tiger, Goat, Dog' 
+    },
+    11: { 
+      name: 'Goat', 
+      icon: '🐑', 
+      trait: 'Gentle and elegant, kind and considerate, compassionate, artistic talent', 
+      element: 'Earth', 
+      numbers: '3, 9', 
+      match: 'Rabbit, Horse, Pig' 
+    }
+  };
+
+  // 计算年龄 + 生肖
+  const calculateAgeAndZodiac = () => {
+    if (!birthDate) {
+      alert('Please select your birth date');
+      return;
+    }
     
-    const birth = new Date(birthDateTime);
+    const birth = new Date(birthDate);
     const now = new Date();
     
-    // 精准年龄计算
-    const diffMs = now - birth;
-    const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const years = Math.floor(totalDays / 365.25);
-    const remainingDays = totalDays % 365.25;
-    const months = Math.floor(remainingDays / 30.44);
-    const days = Math.floor(remainingDays % 30.44);
-    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    // 农历+生肖
-    const solar = Solar.fromDate(birth);
-    const lunar = solar.getLunar();
-    const zodiacCn = lunar.getYearZodiac();
-    const zodiacItem = ZODIAC_LIST.find(item => item.cn === zodiacCn) || ZODIAC_LIST[0];
-
-    // 五行转换（中文→英文）
-    const yearEl = ELEMENT_MAP[FiveElement.fromYear(lunar.getYear()).getName()] || 'Unknown';
-    const monthEl = ELEMENT_MAP[FiveElement.fromMonth(lunar.getMonth()).getName()] || 'Unknown';
-    const dayEl = ELEMENT_MAP[FiveElement.fromDay(lunar.getDay()).getName()] || 'Unknown';
-    const hourEl = ELEMENT_MAP[FiveElement.fromHour(lunar.getHour(0)).getName()] || 'Unknown';
-    const presentElements = [yearEl, monthEl, dayEl, hourEl].filter(el => el !== 'Unknown');
-    const missingElements = ALL_ELEMENTS.filter(el => !presentElements.includes(el));
-
-    // 更新状态
-    setLunarInfo({
-      lunarDate: lunar.toFullString(),
-      zodiac: zodiacItem.name,
-      constellation: solar.getConstellation(),
-      lunarYear: lunar.getYear() + ' (Lunar Year)'
+    if (birth > now) {
+      alert('Birth date cannot be later than today');
+      return;
+    }
+    
+    // 计算年龄
+    let years = now.getFullYear() - birth.getFullYear();
+    let months = now.getMonth() - birth.getMonth();
+    let days = now.getDate() - birth.getDate();
+    
+    if (days < 0) {
+      months--;
+      days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    const diffTime = Math.abs(now - birth);
+    const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // 下次生日
+    let nextBirthday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
+    if (nextBirthday < now) {
+      nextBirthday.setFullYear(now.getFullYear() + 1);
+    }
+    const nextBirthdayStr = nextBirthday.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
     });
-    setZodiacDetail(zodiacItem);
-    setFiveElements({
-      present: presentElements.join(', '),
-      missing: missingElements.length > 0 ? missingElements.join(', ') : 'All Elements Present'
-    });
+    
+    // 设置年龄结果
     setAgeResult({
-      years, months, days, hours, minutes, totalDays
+      years,
+      months,
+      days,
+      totalDays,
+      mainText: `You are ${years} years old`,
+      nextBirthday: nextBirthdayStr
+    });
+    
+    // 计算生肖
+    const birthYear = birth.getFullYear();
+    const zodiacIndex = birthYear % 12;
+    const data = zodiacData[zodiacIndex];
+    
+    setZodiacResult({
+      ...data,
+      yearText: `Born in ${birthYear}`
+    });
+  };
+
+  // 计算日期间隔
+  const calculateDiff = () => {
+    if (!startDate || !endDate) {
+      alert('Please select both start and end dates');
+      return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start > end) {
+      alert('Start date cannot be later than end date');
+      return;
+    }
+    
+    const diffTime = end - start;
+    const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const totalWeeks = Math.floor(totalDays / 7);
+    
+    // 计算年月日
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+    let days = end.getDate() - start.getDate();
+    
+    if (days < 0) {
+      months--;
+      days += new Date(end.getFullYear(), end.getMonth(), 0).getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    let text = '';
+    if (years > 0) text += `${years} years `;
+    if (months > 0) text += `${months} months `;
+    if (days > 0 || (years === 0 && months === 0)) text += `${days} days`;
+    
+    setDiffResult({
+      years,
+      months,
+      days,
+      totalDays,
+      totalWeeks,
+      mainText: text.trim(),
+      totalText: `Total: ${totalDays.toLocaleString()} days (about ${totalWeeks} weeks)`
     });
   };
 
   return (
     <>
       <Head>
-        <title>Age Calculator | Exact Age, Days, Hours & Chinese Zodiac</title>
-        <meta name="description" content="Free online age calculator with Chinese lunar calendar, 12 zodiac animals and Five Elements analysis (Wood, Fire, Earth, Metal, Water)." />
-       <meta name="google-site-verification" content="O01C0BjF7D8IdDOLzl9yQBrXpYMwVhgmU4RgBY8kdsA" />
-        <meta name="keywords" content="age calculator, exact age calculator, birthday calculator, lunar calendar age, Chinese zodiac, 12 zodiac animals, Five Elements, Wood Fire Earth Metal Water, free age calculator" />
-        <meta property="og:title" content="Age Calculator | Exact Age & Chinese Zodiac" />
-        <meta property="og:description" content="Free online age calculator with lunar calendar, 12 zodiac animals and Five Elements analysis." />
-        <meta property="og:url" content="https://agecalcfast.com" />
-        <meta property="og:type" content="website" />
-        <meta property="og:locale" content="en_US" />
-        <meta property="og:site_name" content="AgeCalcFast" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Age Calculator | Exact Age & Chinese Zodiac" />
-        <meta name="twitter:description" content="Free online age calculator with lunar calendar and 12 zodiac animals." />
+        <title>AgeCalcFast - Age Calculator | Date Difference | Chinese Zodiac</title>
+        <meta name="description" content="Simple and easy-to-use age calculation tool: calculate exact age, zodiac personality, and date intervals" />
+        <meta name="keywords" content="age calculator, date difference calculator, chinese zodiac calculator, birthday calculator, how old am I" />
+        <meta name="google-site-verification" content="001C0BjF7D8IdDOLz19yQBrXpYVhwVhgmlU4RgBY8kdsA" />
         <meta name="robots" content="index, follow" />
-        <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
-      <div className="min-h-screen flex flex-col items-center justify-start pt-8 pb-16 px-4 sm:px-6">
-        {/* 顶部标题区 */}
-        <div className="text-center mb-10 w-full max-w-2xl">
-          <h1 className="text-[clamp(2rem,5vw,3rem)] font-bold text-neutral-900 mb-3">
-            Exact Age Calculator
-          </h1>
-          <p className="text-lg text-neutral-600">
-            Calculate your precise age (to the minute) + Chinese zodiac & five elements
-          </p>
-        </div>
+      <style jsx global>{`
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        {/* 输入卡片（核心交互区） */}
-        <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8 mb-8 transition-shadow hover:shadow-xl">
-          <div className="mb-7">
-            <label className="block text-neutral-700 font-medium mb-3 text-lg">
-              Your Birth Date & Time
-            </label>
-            <div className="relative">
-              <DatePicker
-                selected={birthDateTime}
-                onChange={(date) => setBirthDateTime(date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                dateFormat="yyyy-MM-dd HH:mm"
-                monthsShown={2}
-                minDate={new Date(1900, 0, 1)}
-                maxDate={new Date()}
-                className="w-full px-5 py-4 rounded-lg border border-neutral-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base"
-                placeholderText="Select your birth date and time"
-              />
-            </div>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--primary);
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1.25rem;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Tool Sections */
+        .tool-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tool-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tool-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .tool-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .tool-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* Card */
+        .card {
+            background: var(--card);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: var(--card);
+            color: var(--text);
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .date-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), #7c3aed);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Results */
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 0.75rem;
+            border-left: 4px solid var(--primary);
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .result-item {
+            text-align: center;
+            padding: 1.25rem 1rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .result-highlight {
+            font-size: 1.25rem;
+            color: var(--text);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Zodiac Section within Age Tool */
+        .zodiac-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed var(--border);
+            display: none;
+        }
+
+        .zodiac-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .zodiac-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .zodiac-icon-large {
+            font-size: 3.5rem;
+            line-height: 1;
+        }
+
+        .zodiac-info h3 {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .zodiac-info p {
+            color: var(--text-light);
+            margin: 0.25rem 0 0 0;
+            font-size: 0.9rem;
+        }
+
+        .zodiac-trait-box {
+            background: white;
+            padding: 1rem 1.25rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-style: italic;
+            color: var(--text-light);
+            text-align: center;
+            border-left: 3px solid var(--secondary);
+        }
+
+        .zodiac-meta {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 480px) {
+            .zodiac-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .zodiac-meta-item {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .zodiac-meta-label {
+            color: var(--text-light);
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .zodiac-meta-value {
+            color: var(--text);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* Date Diff Specific */
+        .diff-breakdown {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--text);
+            font-weight: 700;
+            box-shadow: var(--shadow);
+        }
+
+        .diff-total {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.2em;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+      `}</style>
+
+      <header>
+          <div className="header-content">
+              <div className="logo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 6v6l4 2"/>
+                  </svg>
+                  AgeCalcFast
+              </div>
+              <nav>
+                  <button 
+                      className={`nav-btn ${activeTab === 'age' ? 'active' : ''}`} 
+                      onClick={() => switchTab('age')}
+                  >
+                      Age & Zodiac
+                  </button>
+                  <button 
+                      className={`nav-btn ${activeTab === 'diff' ? 'active' : ''}`} 
+                      onClick={() => switchTab('diff')}
+                  >
+                      Date Difference
+                  </button>
+              </nav>
           </div>
+      </header>
 
-          <button
-            onClick={calculateAge}
-            disabled={!birthDateTime}
-            className="w-full bg-primary hover:bg-primary-hover disabled:bg-neutral-200 disabled:text-neutral-500 text-white font-semibold py-4 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-98 text-lg"
-          >
-            Calculate My Age
-          </button>
-        </div>
-
-        {/* 结果展示区 */}
-        {ageResult && (
-          <div className="w-full max-w-md space-y-5">
-            {/* 年龄结果卡片 */}
-            <div className="bg-white rounded-2xl shadow-lg p-7 border-l-4 border-primary">
-              <div className="text-center mb-5">
-                <h2 className="text-2xl font-bold text-neutral-900 mb-2">
-                  You are {ageResult.years} Years Old
-                </h2>
-                <p className="text-neutral-600 text-lg">
-                  {ageResult.months} Months, {ageResult.days} Days, {ageResult.hours} Hrs, {ageResult.minutes} Mins
-                </p>
+      <div className="container">
+          {/* 1. Age + Zodiac */}
+          <section id="age" className={`tool-section ${activeTab === 'age' ? 'active' : ''}`}>
+              <div className="tool-header">
+                  <h1>🎂 Age Calculator & Chinese Zodiac</h1>
+                  <p>Select your birth date to get your exact age and zodiac information</p>
               </div>
-              <div className="pt-4 border-t border-neutral-100 text-center">
-                <p className="text-neutral-700 text-lg">
-                  Total Days Lived: <span className="text-primary font-bold text-xl">{ageResult.totalDays}</span>
-                </p>
+              
+              <div className="card">
+                  <div className="form-group">
+                      <label htmlFor="birthDate">Your Birth Date</label>
+                      <input 
+                          type="date" 
+                          id="birthDate" 
+                          value={birthDate}
+                          onChange={(e) => setBirthDate(e.target.value)}
+                      />
+                  </div>
+                  
+                  <button className="btn" onClick={calculateAgeAndZodiac}>
+                      Calculate Age & Check Zodiac
+                  </button>
+                  
+                  {/* Age Result */}
+                  <div id="ageResult" className={`result ${ageResult ? 'show' : ''}`}>
+                      <div className="section-title">Age Information</div>
+                      <div className="result-highlight">
+                          {ageResult?.mainText}
+                      </div>
+                      <div className="result-grid">
+                          <div className="result-item">
+                              <div className="result-number">{ageResult?.years || 0}</div>
+                              <div className="result-label">Years</div>
+                          </div>
+                          <div className="result-item">
+                              <div className="result-number">{ageResult?.months || 0}</div>
+                              <div className="result-label">Months</div>
+                          </div>
+                          <div className="result-item">
+                              <div className="result-number">{ageResult?.days || 0}</div>
+                              <div className="result-label">Days</div>
+                          </div>
+                          <div className="result-item">
+                              <div className="result-number">{ageResult?.totalDays?.toLocaleString() || 0}</div>
+                              <div className="result-label">Total Days</div>
+                          </div>
+                      </div>
+                      <div style={{marginTop: '1rem', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.9rem', padding: '0.75rem', background: 'rgba(255,255,255,0.5)', borderRadius: '0.5rem'}}>
+                          🎉 Next Birthday: <span style={{color: 'var(--primary)', fontWeight: 700}}>{ageResult?.nextBirthday}</span>
+                      </div>
+                  </div>
+                  
+                  {/* Zodiac Result */}
+                  <div id="zodiacResult" className={`zodiac-section ${zodiacResult ? 'show' : ''}`}>
+                      <div className="section-title" style={{'--primary': 'var(--secondary)'}}>Zodiac Information</div>
+                      <div className="zodiac-header">
+                          <div className="zodiac-icon-large">{zodiacResult?.icon || '🐭'}</div>
+                          <div className="zodiac-info">
+                              <h3>{zodiacResult?.name || 'Rat'} Year</h3>
+                              <p>{zodiacResult?.yearText || 'Born in 2000'}</p>
+                          </div>
+                      </div>
+                      <div className="zodiac-trait-box">
+                          {zodiacResult?.trait || 'Witty and flexible, adaptable, good at socializing, creative'}
+                      </div>
+                      <div className="zodiac-meta">
+                          <div className="zodiac-meta-item">
+                              <div className="zodiac-meta-label">Element</div>
+                              <div className="zodiac-meta-value">{zodiacResult?.element || 'Water'}</div>
+                          </div>
+                          <div className="zodiac-meta-item">
+                              <div className="zodiac-meta-label">Lucky Numbers</div>
+                              <div className="zodiac-meta-value">{zodiacResult?.numbers || '2, 3'}</div>
+                          </div>
+                          <div className="zodiac-meta-item">
+                              <div className="zodiac-meta-label">Compatible Zodiacs</div>
+                              <div className="zodiac-meta-value">{zodiacResult?.match || 'Dragon, Monkey'}</div>
+                          </div>
+                      </div>
+                  </div>
               </div>
-            </div>
+          </section>
 
-            {/* 生肖+农历卡片 */}
-            {lunarInfo && zodiacDetail && (
-              <div className="bg-white rounded-2xl shadow-lg p-7 border-l-4 border-secondary">
-                <h3 className="text-xl font-semibold text-neutral-900 mb-4">Chinese Zodiac & Lunar Calendar</h3>
-                <div className="space-y-4 text-neutral-700">
-                  <p className="text-base">
-                    📅 Lunar Date: <span className="text-neutral-800 font-medium">{lunarInfo.lunarDate}</span>
-                  </p>
-                  <p className="text-xl">
-                    {zodiacDetail.icon} Zodiac: <span className="font-semibold">{zodiacDetail.name}</span>
-                    <span className="ml-2 text-sm text-neutral-500">({lunarInfo.lunarYear})</span>
-                  </p>
-                  <p className="text-base">
-                    ♈ Constellation: <span className="text-neutral-800 font-medium">{lunarInfo.constellation}</span>
-                  </p>
-                </div>
-                <div className="mt-5 p-4 bg-neutral-50 rounded-lg text-sm text-neutral-600">
-                  <span className="font-medium">{zodiacDetail.name} Personality:</span> {
-                    zodiacDetail.name === 'Rat' ? 'Intelligent, adaptable and quick-witted' :
-                    zodiacDetail.name === 'Ox' ? 'Hardworking, reliable and patient' :
-                    zodiacDetail.name === 'Tiger' ? 'Courageous, confident and decisive' :
-                    zodiacDetail.name === 'Rabbit' ? 'Gentle, kind and meticulous' :
-                    zodiacDetail.name === 'Dragon' ? 'Dignified, ambitious and visionary' :
-                    zodiacDetail.name === 'Snake' ? 'Calm, wise and perceptive' :
-                    zodiacDetail.name === 'Horse' ? 'Enthusiastic, outgoing and action-oriented' :
-                    zodiacDetail.name === 'Goat' ? 'Amiable, polite and loyal' :
-                    zodiacDetail.name === 'Monkey' ? 'Lively, clever and agile-minded' :
-                    zodiacDetail.name === 'Rooster' ? 'Diligent, trustworthy and thorough' :
-                    zodiacDetail.name === 'Dog' ? 'Loyal, upright and responsible' : 'Easygoing, optimistic and sincere'
-                  }
-                </div>
+          {/* 2. Date Difference */}
+          <section id="diff" className={`tool-section ${activeTab === 'diff' ? 'active' : ''}`}>
+              <div className="tool-header">
+                  <h1>📅 Date Difference Calculator</h1>
+                  <p>Calculate the time difference between two dates</p>
               </div>
-            )}
-
-            {/* 五行分析卡片 */}
-            {fiveElements && (
-              <div className="bg-white rounded-2xl shadow-lg p-7 border-l-4 border-success">
-                <h3 className="text-xl font-semibold text-neutral-900 mb-4">Five Elements Analysis</h3>
-                <div className="space-y-3 text-neutral-700 text-base">
-                  <p>
-                    🔮 Present Elements: <span className="text-neutral-800 font-medium">{fiveElements.present}</span>
-                  </p>
-                  <p>
-                    📿 Missing Elements:
-                    <span className={fiveElements.missing === 'All Elements Present' ? 'text-green-600 font-medium ml-2' : 'text-red-600 font-medium ml-2'}>
-                      {fiveElements.missing}
-                    </span>
-                  </p>
-                </div>
+              
+              <div className="card">
+                  <div className="date-inputs">
+                      <div className="form-group">
+                          <label htmlFor="startDate">Start Date</label>
+                          <input 
+                              type="date" 
+                              id="startDate" 
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
+                          />
+                      </div>
+                      <div className="form-group">
+                          <label htmlFor="endDate">End Date</label>
+                          <input 
+                              type="date" 
+                              id="endDate" 
+                              value={endDate}
+                              onChange={(e) => setEndDate(e.target.value)}
+                          />
+                      </div>
+                  </div>
+                  
+                  <button className="btn btn-secondary" onClick={calculateDiff}>
+                      Calculate Difference
+                  </button>
+                  
+                  <div id="diffResult" className={`result ${diffResult ? 'show' : ''}`}>
+                      <div className="diff-breakdown">{diffResult?.mainText || '0 days'}</div>
+                      <div className="diff-total">{diffResult?.totalText || 'Total: 0 days (about 0 weeks)'}</div>
+                      <div className="result-grid">
+                          <div className="result-item">
+                              <div className="result-number">{diffResult?.years || 0}</div>
+                              <div className="result-label">Years</div>
+                          </div>
+                          <div className="result-item">
+                              <div className="result-number">{diffResult?.months || 0}</div>
+                              <div className="result-label">Months</div>
+                          </div>
+                          <div className="result-item">
+                              <div className="result-number">{diffResult?.days || 0}</div>
+                              <div className="result-label">Days</div>
+                          </div>
+                          <div className="result-item">
+                              <div className="result-number">{diffResult?.totalWeeks || 0}</div>
+                              <div className="result-label">Weeks</div>
+                          </div>
+                      </div>
+                  </div>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* 底部版权 */}
-        <footer className="mt-12 text-neutral-500 text-sm text-center">
-          © {new Date().getFullYear()} AgeCalcFast.com | All rights reserved
-        </footer>
+          </section>
       </div>
+
+      <footer>
+          <p>© 2024 AgeCalcFast.com - Simple and easy-to-use age calculation tool</p>
+      </footer>
     </>
   );
 }
