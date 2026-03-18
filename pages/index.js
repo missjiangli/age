@@ -1,4 +1,3 @@
-// pages/index.js
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 
@@ -241,9 +240,9 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>AgeCalcFast - Age Calculator | Date Difference | Chinese Zodiac</title>
-        <meta name="description" content="Simple and easy-to-use age calculation tool: calculate exact age, zodiac personality, and date intervals" />
-        <meta name="keywords" content="age calculator, date difference calculator, chinese zodiac calculator, birthday calculator, how old am I" />
+        <title>AgeCalcFast - Age Calculator | Date Difference | Chinese Zodiac | Pension Calculator (Estonia)</title>
+        <meta name="description" content="Simple and easy-to-use age calculation tool: calculate exact age, zodiac personality, date intervals, and Estonian pension" />
+        <meta name="keywords" content="age calculator, date difference calculator, chinese zodiac calculator, birthday calculator, how old am I, estonian pension calculator, pensionikalkulaator" />
         <meta name="google-site-verification" content="001C0BjF7D8IdDOLz19yQBrXpYVhwVhgmlU4RgBY8kdsA" />
         <meta name="robots" content="index, follow" />
         <meta charSet="UTF-8" />
@@ -321,6 +320,7 @@ export default function Home() {
         nav {
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap; /* 适配移动端换行 */
         }
 
         .nav-btn {
@@ -344,6 +344,18 @@ export default function Home() {
         .nav-btn.active {
             background: var(--primary);
             color: white;
+        }
+
+        /* 爱沙尼亚语导航按钮特殊样式（区分语种） */
+        .nav-btn.et-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .nav-btn.et-btn:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
         }
 
         /* Main Container */
@@ -691,6 +703,14 @@ export default function Home() {
                   >
                       Date Difference
                   </button>
+                  {/* 新增爱沙尼亚语养老金计算器导航按钮 */}
+                  <a 
+                      href="/et/pensionikalkulaator/" 
+                      className="nav-btn et-btn"
+                      target="_self" // 同页面跳转
+                  >
+                      Pensionikalkulaator (ET)
+                  </a>
               </nav>
           </div>
       </header>
